@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:saber/components/theming/yaru_builder.dart';
 import 'package:saber/data/prefs.dart';
 import 'package:sbn/font_fallbacks.dart';
@@ -36,7 +37,7 @@ abstract class SaberTheme {
     bool highContrast = false,
   }) {
     late final yaruVariant = YaruBuilder.getYaruVariant(seedColor);
-    if (platform == TargetPlatform.linux) {
+    if (platform == .linux) {
       return getThemeFromYaru(
         YaruThemeData(variant: yaruVariant),
         brightness,
@@ -47,7 +48,7 @@ abstract class SaberTheme {
 
     final ColorScheme colorScheme;
     if (platform.usesYaruColors) {
-      colorScheme = brightness == Brightness.light
+      colorScheme = brightness == .light
           ? yaruVariant.theme.colorScheme
           : yaruVariant.darkTheme.colorScheme;
     } else {
@@ -64,31 +65,20 @@ abstract class SaberTheme {
     ColorScheme colorScheme,
     TargetPlatform platform,
   ) {
-    final bool isDark = colorScheme.brightness == Brightness.dark;
-
-    // Custom aesthetic palette tokens
-    final Color customBg = isDark ? const Color(0xFF0B0E14) : const Color(0xFFFFFFFF);
-    final Color customSurface = isDark ? const Color(0xCC161B22) : const Color(0xCCF8F9FA);
-    final Color customPrimary = isDark ? const Color(0xFF00E5FF) : const Color(0xFF00B4D8); // Turquoise
-    final Color customSecondary = isDark ? const Color(0xFFC6A0F6) : const Color(0xFFB8C0E0); // Lilac
-    final Color customTertiary = isDark ? const Color(0xFFF5BDE6) : const Color(0xFFF4B4D6); // Pink
-    final Color customContainer = isDark ? const Color(0xFF3D5A80) : const Color(0xFF1D2D44); // Navy
-
     return colorScheme.copyWith(
       surface: platform.isCupertino
-          ? (colorScheme.brightness == Brightness.light
+          ? (colorScheme.brightness == .light
                 ? CupertinoColors.white
                 : CupertinoColors.darkBackgroundGray)
-          : customBg,
+          : null,
+      // Hack: Mimic Material 3 Expressive color schemes by making
+      // surfaceContainer much closer to surface.
+      // Remove this when Flutter supports M3E natively.
       surfaceContainer: Color.lerp(
-        customSurface,
+        colorScheme.surface,
         colorScheme.surfaceTint,
         0.02,
       )!,
-      primary: customPrimary,
-      secondary: customSecondary,
-      tertiary: customTertiary,
-      primaryContainer: customContainer,
     );
   }
 
@@ -99,8 +89,8 @@ abstract class SaberTheme {
     bool highContrast,
   ) {
     final base = highContrast
-        ? (brightness == Brightness.light ? yaruHighContrastLight : yaruHighContrastDark)
-        : (brightness == Brightness.light ? yaru.theme : yaru.darkTheme);
+        ? (brightness == .light ? yaruHighContrastLight : yaruHighContrastDark)
+        : (brightness == .light ? yaru.theme : yaru.darkTheme);
     return getThemeFromYaruFixed(base, platform);
   }
 
@@ -147,7 +137,7 @@ abstract class _Components {
       platform: platform,
       colorScheme: colorScheme,
     );
-    final textTheme = colorScheme.brightness == Brightness.dark
+    final textTheme = colorScheme.brightness == .dark
         ? typography.white
         : typography.black;
 
@@ -156,11 +146,8 @@ abstract class _Components {
         fontFamily: 'AtkinsonHyperlegibleNext',
         fontFamilyFallback: saberSansSerifFontFallbacks,
       );
-    } else if (platform == TargetPlatform.linux) {
-      // Flutter picks Roboto but Adwaita Sans is a better default
-      return textTheme.withFont(fontFamily: 'Adwaita Sans');
     } else {
-      return textTheme;
+      return GoogleFonts.quicksandTextTheme(textTheme);
     }
   }
 
@@ -177,7 +164,7 @@ abstract class _Components {
       surfaceTintColor: Colors.transparent,
       shadowColor: Colors.transparent,
       shape: RoundedRectangleBorder(
-        borderRadius: const BorderRadius.all(Radius.circular(kYaruContainerRadius)),
+        borderRadius: const .all(.circular(kYaruContainerRadius)),
         side: BorderSide(
           color: colorScheme.onSurface.withValues(alpha: 0.12),
           width: 2,
@@ -196,15 +183,15 @@ abstract class _Components {
 extension SaberThemePlatform on TargetPlatform {
   /// iOS uses Yaru's colorscheme since it looks more native than M3.
   bool get usesYaruColors => switch (this) {
-    TargetPlatform.linux => true,
-    TargetPlatform.iOS => true,
-    TargetPlatform.macOS => true,
+    .linux => true,
+    .iOS => true,
+    .macOS => true,
     _ => false,
   };
 
   bool get isCupertino => switch (this) {
-    TargetPlatform.iOS => true,
-    TargetPlatform.macOS => true,
+    .iOS => true,
+    .macOS => true,
     _ => false,
   };
 }
